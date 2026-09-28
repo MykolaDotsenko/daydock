@@ -105,8 +105,6 @@ Browser release tests cover desktop/mobile, focus flow, recovery and offline reo
 
 The Pages build also verifies that generated assets stay under the repository deployment path instead of silently breaking after a rename/base-path change.
 
-Production Pages deploys only after **Visual Smoke** succeeds on `main`. The deployment checks out that verified commit SHA, re-runs the application verification, and then builds the Pages artifact.
-
 ## Run locally
 
 Requires Node.js 24+.
