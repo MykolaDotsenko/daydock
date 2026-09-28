@@ -1,5 +1,8 @@
 name: Deploy Pages
 
+# Repository Settings → Pages must use "GitHub Actions" as the publishing
+# source. A legacy branch source runs GitHub's Jekyll deployment separately
+# and would bypass this workflow's Visual Smoke gate.
 on:
   workflow_run:
     workflows: ["Visual Smoke"]
