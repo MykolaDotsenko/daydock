@@ -1,199 +1,132 @@
 # DayDock
 
-**A calm, local-first workday command center for deciding what matters now.**
+**A workday planner for capture, priorities, focus, follow-ups and daily review — without productivity scores or streak pressure.**
 
-DayDock helps knowledge workers capture commitments, choose a small set of outcomes, protect focus time, keep follow-ups visible, and close the day without turning productivity into a score.
-
-**Capture → Decide → Focus → Follow up → Review**
-
-[**Live demo**](https://mykoladotsenko.github.io/daydock/) · [v1.0.0 release](https://github.com/MykolaDotsenko/daydock/releases/tag/v1.0.0) · [Architecture](./ARCHITECTURE.md) · [UX flow](./docs/UX_FLOW.md) · [Release QA](./docs/RELEASE_QA.md)
+[**Open the live app →**](https://mykoladotsenko.github.io/daydock/) · [Architecture](./ARCHITECTURE.md)
 
 ![Quality](https://github.com/MykolaDotsenko/daydock/actions/workflows/quality.yml/badge.svg)
-![Visual Smoke](https://github.com/MykolaDotsenko/daydock/actions/workflows/visual-smoke.yml/badge.svg)
 ![Deploy Pages](https://github.com/MykolaDotsenko/daydock/actions/workflows/pages.yml/badge.svg)
 
 ![DayDock Today view showing the current Now outcome, Focus controls, and Top 3 priorities](./docs/assets/daydock-today.webp)
 
-<sub>Current mature Today workspace · promoted from a green release-smoke run.</sub>
+## Product loop
 
-## Product proof
+```text
+capture → decide → focus → follow up → review
+```
 
-The views below come from the same production build exercised by DayDock's Playwright release smoke. They are kept intentionally small in the repository and are promoted only after the corresponding browser scenarios pass.
+DayDock is designed around reducing repeated decisions during the day rather than storing an endless backlog.
 
-<table>
-  <tr>
-    <td width="38%" valign="top">
-      <strong>Mobile Today</strong><br />
-      <sub>Now, Focus controls, Top 3, and mobile navigation at 390px.</sub><br /><br />
-      <img src="./docs/assets/daydock-mobile.webp" width="280" alt="DayDock mobile Today view showing the current outcome, Focus controls, Top 3 priorities, and bottom navigation" />
-    </td>
-    <td width="62%" valign="top">
-      <strong>Focus Mode</strong><br />
-      <sub>A protected task session with timestamp-derived timing, pause/resume, and completion controls.</sub><br /><br />
-      <img src="./docs/assets/daydock-focus.webp" width="800" alt="DayDock Focus Mode showing a paused focus session for Ship DayDock release" />
-    </td>
-  </tr>
-</table>
+## What it does
 
-## Why DayDock exists
+- **Top 3 + Now** — keep daily priorities small and make one outcome explicitly current;
+- **Later scheduling** — Tomorrow, Next week, custom date and Someday;
+- **Recurring work** — Daily, Weekdays, Weekly and Monthly recurrence;
+- **Focus Mode** — pause/resume/complete with timestamp-derived timing;
+- **Calendar Awareness** — import a local `.ics` snapshot and derive busy/focus windows;
+- **People follow-ups** — lightweight person/task links and follow-up dates;
+- **Command Palette** — search tasks and people with `Ctrl/Cmd + K`;
+- **Backup/restore + Undo** — recover from destructive actions and move data between browsers;
+- **PWA** — offline shell, installability, share target and optional notifications;
+- **Cross-tab sync** — workspace changes stay ordered across open tabs.
 
-Most task apps are good at storing work. DayDock is designed around a harder problem: **reducing repeated decisions during the day**.
+There is no account or application backend.
 
-It keeps capture intentionally fast, separates collection from prioritization, limits daily priorities to a Top 3, makes one outcome explicitly current, and gives unfinished work a trusted place to return later.
+## State model
 
-There are no streaks, leaderboards, productivity scores, or artificial overdue pressure.
+One canonical workspace drives the UI.
 
-## Core workflow
-
-| Stage | What DayDock does |
-| --- | --- |
-| **Capture** | One-field Quick Capture, keyboard shortcut, installed-app shortcut, and PWA Share Target |
-| **Decide** | Triage work into Today, Later, Done, or a future Ready again date |
-| **Focus** | Protect up to three outcomes, choose what is **Now**, and run resilient focus sessions |
-| **Follow up** | Keep lightweight people context, linked tasks, and follow-up dates visible |
-| **Review** | See completed work, unresolved work, focus history, and a seven-day rhythm |
-
-## Product highlights
-
-- **Top 3 + Now** — daily priorities stay small, while the current outcome can be promoted without rebuilding the day
-- **Calm Later scheduling** — Tomorrow, Next week, custom date, Someday, and automatic resurfacing
-- **Recurring work** — Daily, Weekdays, Weekly, and Monthly recurrence without corrupting completion history
-- **Focus Mode** — pause/resume/complete with timestamp-derived timing that survives tab throttling
-- **Calendar Awareness** — local `.ics` import, configurable workday, busy-time analysis, and derived focus windows
-- **People follow-ups** — lightweight relationship context without turning DayDock into a CRM
-- **Command Palette** — `Ctrl/Cmd + K` search with exact task/person reveal
-- **Safe recovery** — validated backup/restore plus structural Undo for task/person removal
-- **Local-first PWA** — offline shell, installability, cross-tab sync, share target, app shortcut, and optional Ready again alerts
-- **Accessible by design** — semantic HTML, keyboard flows, reduced-motion, forced-colors, native Dialog and Popover APIs
-
-## Engineering highlights
-
-DayDock is intentionally small in runtime dependencies but serious about state integrity and release quality.
-
-- deterministic domain reducer with ids, timestamps, storage, and browser APIs kept outside business logic
-- one canonical workspace state consumed through `useSyncExternalStore`
-- schema-versioned persistence with Zod validation, migration, normalization, and safe recovery
-- validated BroadcastChannel synchronization with deterministic last-write-wins ordering
-- portable backup format separate from raw localStorage representation
-- custom ICS parsing and recurrence expansion behind a normalized calendar boundary
-- timestamp-based focus timing instead of decrementing canonical seconds
-- build-generated, repository-scope-aware service-worker precache
-- GitHub Pages artifact verification that rejects invalid deployment paths before release
-- deterministic Playwright release smoke across desktop, mobile, Focus, recovery, notification, and offline states
-- feature-scoped CSS modules instead of one monolithic application stylesheet
-
-## Architecture
-
-~~~text
-React feature surfaces
-        │
-        ▼
+```text
+React features
+      ↓
 useSyncExternalStore
-        │
-        ▼
-DayDock external store
-        │
-        ├── versioned persistence + migrations
-        ├── BroadcastChannel synchronization
-        ├── backup / restore
-        └── calendar input boundary
-        │
-        ▼
+      ↓
+DayDock store
+      ├── versioned persistence
+      ├── BroadcastChannel sync
+      ├── backup / restore
+      └── calendar boundary
+      ↓
 pure domain reducer
-        │
-        ├── task + recurrence invariants
-        ├── Top 3 / Now
-        ├── focus lifecycle
-        ├── people relationships
-        └── derived selectors / review insights
-~~~
+      ├── tasks + recurrence
+      ├── Top 3 / Now
+      ├── focus lifecycle
+      └── people / follow-ups
+```
 
-The reducer does not generate ids, read the clock, access storage, or call browser APIs. Persisted and imported data is treated as untrusted input and validated before it becomes canonical application state.
+The reducer does not create IDs, read the clock or access browser APIs. Those values enter from the application boundary so domain transitions remain deterministic.
 
-For system boundaries, failure modes, and deliberate non-goals, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+Persisted/imported data is validated before it becomes canonical state.
+
+## A few implementation choices
+
+### Focus timing
+
+Canonical focus state stores timestamps rather than decrementing seconds every tick. The displayed timer is derived from those timestamps, so tab throttling does not corrupt elapsed time.
+
+### Recurrence
+
+Completing recurring work records the completion and derives the next instance instead of rewriting history.
+
+### Cross-tab ordering
+
+BroadcastChannel messages are validated and use deterministic ordering so two open tabs do not blindly overwrite each other.
+
+### Calendar import
+
+Calendar Awareness parses a local `.ics` snapshot and normalizes recurrence behind its own boundary. It is intentionally not presented as a live calendar connection.
 
 ## Stack
 
-| Layer | Technology |
-| --- | --- |
-| UI | React 19.3, semantic HTML |
-| Language | strict TypeScript 6 |
-| Validation | Zod 4 |
-| Build | Vite 8.3 |
-| Styling | modern CSS, OKLCH, container queries, progressive View Transitions |
-| Browser platform | Web Storage, BroadcastChannel, Dialog, Popover, Service Worker, Web App Manifest |
-| Tests | Vitest, Testing Library, Playwright release smoke |
-| Quality | ESLint 10, TypeScript compiler |
-| CI/CD | GitHub Actions, GitHub Pages |
+- React 19
+- TypeScript 6 strict
+- Zod 4
+- Vite 8
+- CSS Modules / modern CSS
+- Web Storage
+- BroadcastChannel
+- Service Worker / Web App Manifest
+- Vitest + Testing Library
+- Playwright
+- ESLint
+- GitHub Actions + GitHub Pages
 
-Runtime dependencies are intentionally limited to **React, React DOM, and Zod**.
+Runtime dependencies are React, React DOM and Zod.
 
-## Reliability and release gates
+## Quality
 
-Every release is expected to pass:
+```bash
+npm ci
+npm run check
+npm run build:pages
+```
 
-- lint with zero warnings
-- strict TypeScript checking
-- unit and component tests
-- standard production build
-- GitHub Pages-specific artifact verification
-- Playwright smoke across desktop/mobile and critical interaction states
-- warmed production service-worker offline reopening
-- repository-scope checks for manifest, JS, CSS, PWA screenshots, and service-worker assets
+Browser release tests cover desktop/mobile, focus flow, recovery and offline reopening.
 
-The Pages build explicitly fails if emitted assets escape `/daydock/` or if the legacy repository path reappears.
-
-The browser suite uses isolated contexts, accessible selectors, explicit readiness assertions, runtime-error capture, and test-runner retries instead of fixed screenshot sleeps.
-
-See [docs/RELEASE_QA.md](./docs/RELEASE_QA.md) for the full release contract.
+The Pages build also verifies that generated assets stay under the repository deployment path instead of silently breaking after a rename/base-path change.
 
 ## Run locally
 
 Requires Node.js 24+.
 
-~~~bash
+```bash
 npm ci
 npm run dev
-~~~
+```
 
-Run the full quality gate:
+## Quick technical review
 
-~~~bash
-npm run check
-~~~
+- [`src/domain/daydock/reducer.ts`](./src/domain/daydock/reducer.ts) — deterministic transitions
+- [`src/storage/dayDockPersistence.ts`](./src/storage/dayDockPersistence.ts) — validation/migration
+- [`src/store/synchronizedDayDockStore.ts`](./src/store/synchronizedDayDockStore.ts) — cross-tab sync
+- [`src/domain/calendar/ics.ts`](./src/domain/calendar/ics.ts) — calendar parsing
+- [`src/features/focus/FocusMode.tsx`](./src/features/focus/FocusMode.tsx) — focus workflow
+- [`ARCHITECTURE.md`](./ARCHITECTURE.md) — boundaries and trade-offs
 
-Verify the GitHub Pages artifact:
+## Privacy and limits
 
-~~~bash
-npm run build:pages
-~~~
+Workspace and imported calendar data stay in the browser by default.
 
-The Visual Smoke workflow installs a pinned Playwright runner in CI so browser-release tooling does not expand DayDock's runtime dependency surface.
+Browser notifications are best-effort and are not described as guaranteed background delivery.
 
-## Code tour
-
-If you are reviewing DayDock technically, start here:
-
-1. [src/domain/daydock/reducer.ts](./src/domain/daydock/reducer.ts) — deterministic domain transitions and invariants
-2. [src/storage/dayDockPersistence.ts](./src/storage/dayDockPersistence.ts) — schema validation, migration, and normalization
-3. [src/store/synchronizedDayDockStore.ts](./src/store/synchronizedDayDockStore.ts) — cross-tab ordering and failure isolation
-4. [src/domain/calendar/ics.ts](./src/domain/calendar/ics.ts) — local calendar parsing and recurrence handling
-5. [src/features/focus/FocusMode.tsx](./src/features/focus/FocusMode.tsx) — resilient focus workflow
-6. [src/App.test.tsx](./src/App.test.tsx) — user-level component journeys
-7. [e2e/visual-smoke.spec.mjs](./e2e/visual-smoke.spec.mjs) — deterministic browser/platform release proof
-8. [scripts/verify-pages-build.mjs](./scripts/verify-pages-build.mjs) — deployment-path regression guard
-9. [ARCHITECTURE.md](./ARCHITECTURE.md) — boundaries, trade-offs, failure model, and non-goals
-
-## Privacy and product boundaries
-
-DayDock requires no account and has no application backend. Workspace data stays in the browser by default, backup export is generated client-side, and imported backups are validated before they can replace current state.
-
-Calendar Awareness is a local snapshot from imported `.ics` data, not a live calendar connection. Ready again system alerts are also intentionally honest about browser permission and background-delivery limitations.
-
-## Repository standards
-
-- [Contributing](./CONTRIBUTING.md)
-- [Security policy](./SECURITY.md)
-- [Release QA](./docs/RELEASE_QA.md)
-
-The public repository intentionally does not claim an open-source license unless one is explicitly chosen and added.
+No open-source license is claimed unless one is explicitly added to the repository.
